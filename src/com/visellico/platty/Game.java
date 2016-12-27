@@ -11,8 +11,13 @@ import java.util.List;
 import javax.swing.JFrame;
 
 import com.farr.Events.Event;
+import com.farr.Events.EventDispatcher;
 import com.farr.Events.EventListener;
 import com.farr.Events.Layer;
+import com.farr.Events.types.KeyTypedEvent;
+import com.visellico.input.Keyboard;
+import com.visellico.platty.level.Level;
+import com.visellico.util.Debug;
 
 public class Game extends Canvas implements Runnable, EventListener {
 
@@ -23,15 +28,29 @@ public class Game extends Canvas implements Runnable, EventListener {
 	
 	private JFrame frame;
 	private static final String title = "Platty The Platformer";
-	private int width = 300 * 3;
-	private int height = 168 * 3;
+	//standard W/H
+	public static int defWidth = 300 * 3;
+	public static int defHeight = 168 * 3;
+	public static int width = defWidth;
+	public static int height = defHeight;
+	public static int newWidth = width;
+	public static int newHeight = height;
+	
+//	public static int width = 1777;
+//	public static int height = 1000;
 	
 	public static Game game;
+	public Keyboard key;
 	
 	private Thread thread;
 	private boolean running = false;
 	
 	private List<Layer> layerStack = new ArrayList<>();
+	
+	public Level level;
+	
+	
+	
 	
 	public Game() {
 		
@@ -39,6 +58,15 @@ public class Game extends Canvas implements Runnable, EventListener {
 		setPreferredSize(size);
 		
 		frame = new JFrame();
+		
+//		frame.setExtendedState(JFrame.MAXIMIZED_BOTH);
+//		frame.setUndecorated(true);
+		
+		level = new Level("Testing");
+		addLayer(level);
+		
+		key = new Keyboard(this);
+		this.addKeyListener(key);
 		
 	}
 	
@@ -61,6 +89,9 @@ public class Game extends Canvas implements Runnable, EventListener {
 		System.out.println("GAME, main class; main thread has stopped! (debug)");
 	}
 
+	private int updates;
+	private int frames;
+	
 	public void run() {
 		
 		final double updatesPerSec = 60.0;
@@ -74,8 +105,8 @@ public class Game extends Canvas implements Runnable, EventListener {
 		double updateDelta = 0;
 		
 		long timer = System.currentTimeMillis();
-		int updates = 0; 
-		int frames = 0;
+		updates = 0; 
+		frames = 0;
 		
 		while (running) {
 			currentTime = System.nanoTime();
@@ -95,7 +126,10 @@ public class Game extends Canvas implements Runnable, EventListener {
 			//Display the framerate and update rate every second
 			while(System.currentTimeMillis() - timer >= 0) {
 				timer += 1000;
-				frame.setTitle(title + " DEBUG: FPS: " + frames + " UPS: " + updates);
+				if (level != null) 
+					frame.setTitle(title + " | " + level.name + " | DEBUG: FPS: " + frames + " UPS: " + updates);
+				else 
+					frame.setTitle(title + " | DEBUG: FPS: " + frames + " UPS: " + updates);
 				updates = 0;
 				frames = 0;
 			}
@@ -105,6 +139,19 @@ public class Game extends Canvas implements Runnable, EventListener {
 	}
 
 	public void update() {
+		
+		//changing size
+//		frame.setSize(1777, 1000);
+//		frame.setLocationRelativeTo(null);
+		
+		//frame.getWidth being, essentially, our "newWidth"
+		//Basically, lets us resize the frame and region its rendered to. Screen has to take care of itself.
+		if (frame.getWidth() != width) {
+			width = frame.getWidth();
+		}
+		if (frame.getHeight() != height) {
+			height = frame.getHeight();
+		}
 		
 		//Updates from top layer to bottom. actually doesn't matter, and Im going to make it from bottom up.
 		for (int i = layerStack.size() - 1; i >= 0; i--) {
@@ -130,16 +177,36 @@ public class Game extends Canvas implements Runnable, EventListener {
 			
 		}
 		
+		g.drawString("-----DIAGNOSTICS-----", 0, 10);
+		g.drawString("OBJ RENDER : " + Debug.objectsRendered, 0, 43);
+		
+		g.drawString("DEBUG KEYS", 0, 150);
+		g.drawString("CTRL Z : Zoom in", 0, 161);
+		g.drawString("CTRL X : Zoom out", 0, 172);
+		g.drawString("CTRL R : Zoom reset", 0, 183);
+		g.drawString("SHFT R : Reload assets", 0, 194);
+		
+//		g.drawString("FPS : " + frames, 0, 35);
+//		g.drawString("UPS : " + updates, 0, 46);
+		
 		bs.show();
 		g.dispose();
 		
 	}
 	
 	public void onEvent(Event event) {
+		
+		EventDispatcher dispatcher = new EventDispatcher(event);
+		dispatcher.dispatch(Event.Type.KEY_TYPED, (Event e) -> onKeyType((KeyTypedEvent) e));
+		
 		//events go down the layer stack in reverse order
 		for (int i = layerStack.size() - 1; i >= 0; i--) {
 			layerStack.get(i).onEvent(event);
 		}
+	}
+	
+	public void onKeyType(KeyTypedEvent e) {
+		if (e.getKeyChar() == '\u001b') System.exit(0);
 	}
 	
 	public void addLayer(Layer l) {
@@ -160,6 +227,9 @@ public class Game extends Canvas implements Runnable, EventListener {
 		game = new Game();
 		
 		game.frame.setResizable(false);
+		
+		//For full screen, get rid of setTitle and setLocation, and uncomment the stuff in Game constructor
+		
 		game.frame.setTitle(title);
 		game.frame.add(game);
 		game.frame.pack();

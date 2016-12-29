@@ -27,7 +27,8 @@ public class Game extends Canvas implements Runnable, EventListener {
 	private static final long serialVersionUID = 1L;
 	
 	private JFrame frame;
-	private static final String title = "Platty The Platformer";
+	private static final String TITLE = "Platty The Platformer";
+	private static final String VERSION = "dev 0.1";
 	//standard W/H
 	public static int defWidth = 300 * 3;
 	public static int defHeight = 168 * 3;
@@ -127,9 +128,9 @@ public class Game extends Canvas implements Runnable, EventListener {
 			while(System.currentTimeMillis() - timer >= 0) {
 				timer += 1000;
 				if (level != null) 
-					frame.setTitle(title + " | " + level.name + " | DEBUG: FPS: " + frames + " UPS: " + updates);
+					frame.setTitle(TITLE + " | " + VERSION + " | " + level.name + " | DEBUG: FPS: " + frames + " UPS: " + updates);
 				else 
-					frame.setTitle(title + " | DEBUG: FPS: " + frames + " UPS: " + updates);
+					frame.setTitle(TITLE + " | DEBUG: FPS: " + frames + " UPS: " + updates);
 				updates = 0;
 				frames = 0;
 			}
@@ -230,7 +231,7 @@ public class Game extends Canvas implements Runnable, EventListener {
 		
 		//For full screen, get rid of setTitle and setLocation, and uncomment the stuff in Game constructor
 		
-		game.frame.setTitle(title);
+		game.frame.setTitle(TITLE + " | " + VERSION);
 		game.frame.add(game);
 		game.frame.pack();
 		game.frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);

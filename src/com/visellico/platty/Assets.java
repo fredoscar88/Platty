@@ -8,6 +8,8 @@ public class Assets {
 		public static String defaultLevelType = "/Level Types/Default/Debug";
 	public static String dirCustomLevelTypes = "/Level Types/Custom";
 	
+	public static String pathToRes = System.getProperty("user.dir") + "/res";
+	
 
 	private Assets() {
 	}

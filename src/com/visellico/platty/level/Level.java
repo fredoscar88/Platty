@@ -25,6 +25,13 @@ import com.visellico.platty.level.terrain.Wall;
 
 public class Level implements Layer {
 
+	//TODO in WAY FUTURE 
+	//	When loading a level, CACHE AN IMAGE OF THE STATIC OBJECTS OF THE LEVEL (LOOKING AT YOU, ANY SUBCLASS OF TERRAIN AS IT STANDS ATM)
+	//	Moving "terrain" can get its own category, and stuff that isn't terrain isn't really 'static' in the same way and can be rendered as is now (ala coins)
+	//	Essentially, for any static pieces (basically background and terrain) we just have to cache the pixel array, perhaps as a seperate screen, just once. Then,
+	//		we'll draw that screen first, then the dynamic objects screen on top. Alternatively, layer the pixels of the static screen into the dynamic screen,
+	//		then make all of the render calls for the dynamic objects to cover over the pixels. This would make for a more efficient experience das ist gut yes.
+	
 	//List of Entities
 	//List of Items (which might be entities..)
 	//List of Objects
@@ -176,6 +183,7 @@ public class Level implements Layer {
 		g.setColor(Color.white);
 		g.setFont(new Font("Consolas", 0, 12));		
 		g.drawImage(screen.image, 0, 0, screen.width * screen.scale, screen.height * screen.scale, null);
+		
 		g.drawString("LEVEL  POS : " + xPos + " " + yPos, 0, 21);
 		g.drawString("SCREEN POS : " + xPos + " " + getScreenY(yPos), 0, 32);
 		g.drawString("ZOOM LVL   : " + newScale + ((newScale == SCREEN_SCALE) ? " (Default)" : ""), 0, 54);

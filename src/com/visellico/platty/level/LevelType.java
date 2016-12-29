@@ -63,7 +63,7 @@ public class LevelType {
 //		spritePlatform = new Sprite(levelTypeDirectoryPath + File.separator + "platform.png");
 		
 		spriteBackground = new Sprite(levelTypePath + "/background.png");
-		spriteBackgroundObject = new Sprite(levelTypePath + "/backgroundObject.png");
+//		spriteBackgroundObject = new Sprite(levelTypePath + "/backgroundObject.png");
 		
 		spriteCoin = new Sprite(levelTypePath + "/coin.png");
 		

@@ -42,6 +42,7 @@ public class Level implements Layer {
 	//Default scale
 	private static final int SCREEN_SCALE = 4;
 	private int newScale = SCREEN_SCALE;
+	public static final String DEFAULT_LEVEL_TYPE = "Fields";	
 	
 	public int width;
 	public int height;
@@ -68,7 +69,7 @@ public class Level implements Layer {
 		this.name = name;
 		
 		try {
-			levelType = new LevelType("Debug2", true);
+			levelType = new LevelType(DEFAULT_LEVEL_TYPE, true);
 		} catch (IOException e) {
 			e.printStackTrace();
 			System.exit(0);
@@ -143,6 +144,21 @@ public class Level implements Layer {
 		
 		//TODO OTHER ADDING THINGS
 		a.init(this);
+	}
+	
+	public void reloadAssets() {
+		try {
+			levelType.loadAssets(levelType.levelTypeDirectoryPath);
+		} catch (IOException e) {
+			try {
+				levelType = new LevelType(DEFAULT_LEVEL_TYPE, true);
+			} catch (IOException e1) {
+				System.err.println("Listen you really dun' messed up");
+				e1.printStackTrace();
+			}
+		}
+		for (Addable a : addables)
+			a.init(this);
 	}
 	
 	public void render(Graphics g) {
@@ -280,9 +296,7 @@ public class Level implements Layer {
 			if (screen.scale > 1) newScale = screen.scale - 1;
 			return true;
 		case (charShftR): 
-			levelType.loadAssets(levelType.levelTypeDirectoryPath);
-			for (Addable a : addables)
-				a.init(this);
+			reloadAssets();
 			return true;
 		default: return false;
 		}

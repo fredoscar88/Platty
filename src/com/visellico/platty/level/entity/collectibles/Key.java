@@ -1,4 +1,4 @@
-package com.visellico.platty.entity.collectibles;
+package com.visellico.platty.level.entity.collectibles;
 
 import com.visellico.graphics.Sprite;
 import com.visellico.platty.level.Collideable;

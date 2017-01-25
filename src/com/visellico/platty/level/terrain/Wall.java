@@ -3,9 +3,12 @@ package com.visellico.platty.level.terrain;
 import com.visellico.graphics.Screen;
 import com.visellico.graphics.Sprite;
 import com.visellico.platty.level.Level;
+import com.visellico.rainecloud.serialization.RCObject;
 
 public class Wall extends Terrain {
 
+	public static final String WALL_TYPE_NAME = "wall";
+	
 	private Sprite spriteWall;
 	private Sprite spriteWallTop;
 	private Sprite spriteWallTrimLeft;
@@ -16,6 +19,19 @@ public class Wall extends Terrain {
 		this.y = y;
 		this.width = width;
 		this.height = height;
+	}
+	
+	public static Wall load(RCObject objWall) {
+		
+		int x, y, width, height;
+		x = objWall.findField("x").getInt();
+		y = objWall.findField("y").getInt();
+		width = objWall.findField("width").getInt();
+		height = objWall.findField("height").getInt();
+		
+		Wall f = new Wall(x, y, width, height);
+		
+		return f;
 	}
 	
 	public void render(Screen screen) {

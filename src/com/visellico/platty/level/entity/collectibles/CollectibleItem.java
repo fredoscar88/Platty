@@ -1,11 +1,11 @@
-package com.visellico.platty.entity.collectibles;
+package com.visellico.platty.level.entity.collectibles;
 
 import com.visellico.graphics.Screen;
 import com.visellico.graphics.Sprite;
-import com.visellico.platty.entity.Entity;
-import com.visellico.platty.entity.Hitbox;
 import com.visellico.platty.level.Collideable;
 import com.visellico.platty.level.Level;
+import com.visellico.platty.level.entity.Entity;
+import com.visellico.platty.level.entity.Hitbox;
 
 public class CollectibleItem extends Entity {
 

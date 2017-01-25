@@ -4,6 +4,7 @@ import com.visellico.graphics.Screen;
 import com.visellico.graphics.Sprite;
 import com.visellico.util.MathUtils;
 
+@Deprecated
 public class BackgroundObject implements Addable {
 
 	private Sprite spriteBackgroundObject;

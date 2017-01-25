@@ -3,8 +3,11 @@ package com.visellico.platty.level.terrain;
 import com.visellico.graphics.Screen;
 import com.visellico.graphics.Sprite;
 import com.visellico.platty.level.Level;
+import com.visellico.rainecloud.serialization.RCObject;
 
 public class Floor extends Terrain {
+	
+	public static final String FLOOR_TYPE_NAME = "floor";
 	
 	public static Sprite spriteFloor;
 	public static Sprite spriteTop;
@@ -27,6 +30,20 @@ public class Floor extends Terrain {
 		//Important: Height and length do not have to be sprite units. They are in fact pixel units. I hope this works anyway.
 		
 		this.name = name;
+	}
+	
+	public static Floor load(RCObject objFloor) {
+		
+		int x, y, width, height;
+		x = objFloor.findField("x").getInt();
+		y = objFloor.findField("y").getInt();
+		width = objFloor.findField("width").getInt();
+		//Not super important that we get the height since height == y
+		height = objFloor.findField("height").getInt();	
+		
+		Floor f = new Floor(x, y, width);
+		
+		return f;
 	}
 	
 	/**

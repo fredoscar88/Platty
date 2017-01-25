@@ -1,8 +1,8 @@
-package com.visellico.platty.entity.collectibles;
+package com.visellico.platty.level.entity.collectibles;
 
 import com.visellico.graphics.Screen;
-import com.visellico.platty.entity.Hitbox;
 import com.visellico.platty.level.Level;
+import com.visellico.platty.level.entity.Hitbox;
 
 public class Coin extends CollectibleItem {
 

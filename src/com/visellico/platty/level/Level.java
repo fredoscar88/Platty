@@ -16,12 +16,16 @@ import com.farr.Events.types.KeyReleasedEvent;
 import com.farr.Events.types.KeyTypedEvent;
 import com.visellico.graphics.Screen;
 import com.visellico.platty.Game;
-import com.visellico.platty.entity.collectibles.Coin;
-import com.visellico.platty.entity.collectibles.CollectibleItem;
+import com.visellico.platty.level.entity.collectibles.Coin;
+import com.visellico.platty.level.entity.collectibles.CollectibleItem;
 import com.visellico.platty.level.terrain.Floor;
 import com.visellico.platty.level.terrain.Platform;
 import com.visellico.platty.level.terrain.Terrain;
 import com.visellico.platty.level.terrain.Wall;
+import com.visellico.rainecloud.serialization.RCDatabase;
+import com.visellico.rainecloud.serialization.RCObject;
+import com.visellico.util.Debug;
+import com.visellico.util.FileUtils;
 
 public class Level implements Layer {
 
@@ -50,15 +54,35 @@ public class Level implements Layer {
 	private int xPos = 0;
 	private int yPos = 0;
 	
-	public LevelType levelType;
+	public LevelType levelType;	//Refers to the assets this level uses
+	public boolean isDefault;
+	public boolean usesDefaultAssets;
 	
 	private List<Addable> addables = new ArrayList<>();
 	private List<Terrain> terrainObjs = new ArrayList<>();
 	private List<CollectibleItem> collectibles = new ArrayList<>();
 	private Background backgroundMain;
-	private BackgroundObject backgroundObject;
+//	private BackgroundObject backgroundObject;
 	
-	private Level() {
+	private Level(String name, String type, int width, int height, boolean isDefault, boolean usesDefaultAssets) {
+		
+		this.name = name;
+		this.isDefault = isDefault;
+		this.usesDefaultAssets = usesDefaultAssets;
+		
+		try {
+			levelType = new LevelType(type, usesDefaultAssets);
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		screen = new Screen(Game.width/SCREEN_SCALE, Game.height/SCREEN_SCALE, SCREEN_SCALE);
+		
+		this.width = width;
+		this.height = height;
+		
+		add(new Background());
+		
 	}
 	
 	/**
@@ -119,14 +143,58 @@ public class Level implements Layer {
 		
 	}
 	
+//	public void sort() {
+//		//Sort terrain based on height, in turn based on "layers", then just re-add entities or w/e. I don't know if entities need to be sorted. I imagine players will be
+//		//	on top of the rendering pile (last to be rendered in) and generally won't need to collide with other entities.
+//	}
+	
+	/**
+	 * Main way to load levels
+	 * Loads a level from a platty .lvl file in the resources. Maybe I should add some sort of header to these files...
+	 * @param path
+	 * @return
+	 */
 	public static Level loadLevelFromFile(String path) {
 		
-		Level l = new Level();
+		RCDatabase db = RCDatabase.deserializeFromFile(path);
+		String name = FileUtils.stripPath(path);
 		
-		//Deserialize entire level and construct each component as needed (items like coins, mobs, etc)
+		if (db == null) return null;
+		
+		RCObject meta = db.objects.get(0);
+		Level l;
+		
+		try {
+			l = new Level(
+				name,	//db.getName(), 
+				meta.findString("type").getString(), 
+				meta.findField("width").getInt(), 
+				meta.findField("height").getInt(), 
+				meta.findField("isDefault").getBoolean(),
+				meta.findField("usesDefaultAssets").getBoolean());
+		} catch (Exception e) {	//I believe these will throw NullPointerException
+			e.printStackTrace();
+			return null;
+			
+		}
+		
+		//THIS STARTS AT 1
+		RCObject obj;
+		for (int i = 1; i < db.objects.size(); i++) {
+			Addable a = null;
+			obj = db.objects.get(i);
+			
+			switch (obj.getName()) {
+			case (Terrain.TERRAIN_NAME): 
+				a = Terrain.load(obj, obj.findString("type").getString()); break;
+				
+			}
+			l.add(a);
+		}
+		
+//		l.sort();
 		
 		return l;
-		
 	}
 	
 	public void add(Addable a) {
@@ -140,7 +208,7 @@ public class Level implements Layer {
 		
 		//Stuff that isnt kept in a list is still added like this
 		if (a instanceof Background) backgroundMain = (Background) a;
-		if (a instanceof BackgroundObject) backgroundObject = (BackgroundObject) a;		
+//		if (a instanceof BackgroundObject) backgroundObject = (BackgroundObject) a;		
 		
 		//TODO OTHER ADDING THINGS
 		a.init(this);
@@ -178,7 +246,7 @@ public class Level implements Layer {
 		screen.renderPoint(width, height, 0xFF0000);
 		
 		if (backgroundMain != null) backgroundMain.render(screen);
-		if (backgroundObject != null) backgroundObject.render(screen);
+//		if (backgroundObject != null) backgroundObject.render(screen);
 		for (Terrain t : terrainObjs) {
 			t.render(screen);
 		}
@@ -196,16 +264,27 @@ public class Level implements Layer {
 //		screen.renderLine(30, 10, 120, 100, 0x087C1A);
 				
 		screen.pack();
-		g.setColor(Color.white);
-		g.setFont(new Font("Consolas", 0, 12));		
+		
 		g.drawImage(screen.image, 0, 0, screen.width * screen.scale, screen.height * screen.scale, null);
 		
-		g.drawString("LEVEL  POS : " + xPos + " " + yPos, 0, 21);
-		g.drawString("SCREEN POS : " + xPos + " " + getScreenY(yPos), 0, 32);
-		g.drawString("ZOOM LVL   : " + newScale + ((newScale == SCREEN_SCALE) ? " (Default)" : ""), 0, 54);
-		g.drawString("PX IN FRAME: " + screen.height * screen.width, 0, 65);
-		g.drawString("SCREEN W   : " + screen.width, 0, 76);
-		g.drawString("SCREEN H   : " + screen.height, 0, 87);
+		Debug.addStr("LEVEL  POS : " + xPos + " " + yPos);
+		Debug.addStr("SCREEN POS : " + xPos + " " + getScreenY(yPos));
+		Debug.addStr("ZOOM LVL   : " + newScale + ((newScale == SCREEN_SCALE) ? " (Default)" : ""));
+		Debug.addStr("PX IN FRAME: " + screen.height * screen.width);
+		Debug.addStr("SCREEN W   : " + screen.width);
+		Debug.addStr("SCREEN H   : " + screen.height);
+		
+//		g.setColor(Color.white);
+//		g.setFont(new Font("Consolas", 0, 12));	
+		//TBH REALLY NEED A DEBUG STRING DRAWING CLASS
+//		g.drawImage(screen.image, 0, 0, screen.width * screen.scale, screen.height * screen.scale, null);
+//		
+//		g.drawString("LEVEL  POS : " + xPos + " " + yPos, 0, 21);
+//		g.drawString("SCREEN POS : " + xPos + " " + getScreenY(yPos), 0, 32);
+//		g.drawString("ZOOM LVL   : " + newScale + ((newScale == SCREEN_SCALE) ? " (Default)" : ""), 0, 54);
+//		g.drawString("PX IN FRAME: " + screen.height * screen.width, 0, 65);
+//		g.drawString("SCREEN W   : " + screen.width, 0, 76);
+//		g.drawString("SCREEN H   : " + screen.height, 0, 87);
 		
 	}
 	
@@ -220,6 +299,9 @@ public class Level implements Layer {
 	int yMoving = 0;
 	
 	public void update() {
+		
+		//TODO create a static background screen, for all of the static, nonmoving object like floors and walls so they don't have to be constantly rendered over one another
+		//	Which would be rendered first as a static image, then the other screen rendered on top (the other screen has to clear to a pink background and skip rendering them)
 		
 		//If new scale has been changed, creates new screen
 		if (screen.scale != newScale) 

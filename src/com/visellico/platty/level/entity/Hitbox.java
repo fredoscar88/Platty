@@ -1,4 +1,4 @@
-package com.visellico.platty.entity;
+package com.visellico.platty.level.entity;
 
 public class Hitbox {
 

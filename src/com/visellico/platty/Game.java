@@ -62,11 +62,13 @@ public class Game extends Canvas implements Runnable, EventListener {
 	
 	private List<Layer> layerStack = new ArrayList<>();
 	
-	public Level level;
+	public Level currentLevel;
+	public Menu currentMenu;
+	public static Font fontDefault = new Font("Times New Roman", Font.PLAIN, 48);
 	
 	//-------
-	public UIPanel panelMainMenu = new UIPanel(new Vector2i(0,0), new Vector2i(Game.defWidth, Game.defHeight));
-	public UILabel labelAnim = (UILabel) new UILabel(new Vector2i(450,240), "Tons of fun!").setColor(0x485C5A);
+	public UIPanel panelMainMenu = new UIPanel(new Vector2i(0,0), new Vector2i(Game.defWidth, Game.defHeight), false);
+	public UILabel labelAnim = (UILabel) new UILabel(new Vector2i(430,240), "Tons of fun!", fontDefault).setColor(0x485C5A);
 	//-------
 	
 	//BIG ASS TODO - SUPPORT MULTIPLE RESOLUTIONS, CHOOSING A NATIVE ONE AS DEFAULT PER USER SCREEN WITH A DEFINITE MINIMUM! POSITION UI RELATIVELY!
@@ -77,43 +79,8 @@ public class Game extends Canvas implements Runnable, EventListener {
 		
 		frame = new JFrame();
 		
-		//------MENU-------
-		Menu mainMenu = new Menu("");
-		
-		panelMainMenu.renderBackground = false;
-		labelAnim.backgrndVisible = false;
-		
-		labelAnimDefX = labelAnim.position.x;
-		labelAnimDefY = labelAnim.position.y;
-		
-		panelMainMenu.add(labelAnim);
-		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> {}, "Play"));
-		panelMainMenu.add(new UIButton(new Vector2i(750,392), new Vector2i(310,40), () -> {}, "Options"));
-		panelMainMenu.add(new UIButton(new Vector2i(750,434), new Vector2i(310,40), () -> {}, "Help"));
-		panelMainMenu.add(new UIButton(new Vector2i(750,476), new Vector2i(310,40), () -> {}, "About"));
-		panelMainMenu.add(new UIButton(new Vector2i(750,518), new Vector2i(310,40), () -> {System.exit(0);}, "Exit"));
-		
-		mainMenu.addPanel(panelMainMenu);
-		
-		labelAnim.setActionListener(() -> {System.exit(0);});
-		
-		
-		//------MENU FIN---
-		
-		
 //		frame.setExtendedState(JFrame.MAXIMIZED_BOTH); <FULL SCREEN>
 //		frame.setUndecorated(true);
-		
-//		level = new Level("Testing");
-//		level = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
-		level = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
-		if (level == null) {
-			//TODO Return to menu
-			System.err.println("Level not found or otherwise not loaded.");
-			System.exit(0);
-		}
-//		addLayer(level);
-		addLayer(Menu.getCurrentMenu());
 		
 		key = new Keyboard(this);
 		mouse = new Mouse(this);
@@ -130,6 +97,10 @@ public class Game extends Canvas implements Runnable, EventListener {
 	public void start() {
 		running = true;
 		
+		Menu.navigateTo(Assets.menuNameMain);
+		currentMenu = Menu.getCurrentMenu();
+		addLayer(currentMenu);
+		
 		thread = new Thread(this, "Game");
 		thread.start();	//automatically executes run(), given we implement runnable and have provided a run method.
 	}
@@ -144,6 +115,53 @@ public class Game extends Canvas implements Runnable, EventListener {
 		}
 		
 		System.out.println("GAME, main class; main thread has stopped! (debug)");
+	}
+	
+	public void startLevel() {
+		
+//		level = new Level("Testing");
+//		level = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
+		currentLevel = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
+		if (currentLevel == null) {
+			//TODO Return to menu
+			System.err.println("Level not found or otherwise not loaded.");
+			System.exit(0);
+		}
+		
+		Menu.clear();
+	}
+	
+	public void exitLevel() {
+		
+		Menu.navigateTo(Assets.menuNameMain);
+		//TODO add progress saving. Or not because this is a platformer. But any extra stuff that should go here.
+		currentLevel = null;
+		
+	}
+	
+	/**
+	 * Sorts out layerStack, keeping it tidy.
+	 */
+	public void layerSort() {
+		
+		layerStack.clear();
+		
+		if (currentLevel != null) {
+			addLayer(currentLevel);
+		} else if (currentMenu != null) {
+			addLayer(currentMenu);
+		} else {
+			Menu.navigateTo(Assets.menuNameMain);
+			currentMenu = Menu.getCurrentMenu();
+			addLayer(currentMenu);
+		}
+		
+	}
+	
+	
+	public static void exit() {
+		//TODO other things that need must be done on exit, such as saving the game. We might even override the window close event.
+		System.exit(0);
 	}
 
 	private int updates;
@@ -183,8 +201,8 @@ public class Game extends Canvas implements Runnable, EventListener {
 			//Display the framerate and update rate every second
 			while(System.currentTimeMillis() - timer >= 0) {
 				timer += 1000;
-				if (level != null) 
-					frame.setTitle(TITLE + " | " + VERSION + " | " + level.name + " | DEBUG: FPS: " + frames + " UPS: " + updates);
+				if (currentLevel != null) 
+					frame.setTitle(TITLE + " | " + VERSION + " | " + currentLevel.name + " | DEBUG: FPS: " + frames + " UPS: " + updates);
 				else 
 					frame.setTitle(TITLE + " | DEBUG: FPS: " + frames + " UPS: " + updates);
 				updates = 0;
@@ -207,6 +225,22 @@ public class Game extends Canvas implements Runnable, EventListener {
 		increment++;
 		if (increment == Integer.MAX_VALUE) increment = 0;	//This would just rollover into Integer.MIN_VALUE and probably not be that big of a deal.
 		
+		currentMenu = Menu.getCurrentMenu();
+		if (currentMenu != null) {
+			System.out.println(currentMenu.name);
+		}
+		layerSort();
+//		if (currentMenu != null ) {//&& layerStack.get(layerStack.size() - 1) instanceof Menu) {
+//			if (layerStack.get(layerStack.size() - 1) != currentMenu) {
+//				layerStack.remove(layerStack.size() - 1);
+//				layerStack.add(currentMenu);
+//			}
+//		} else if (currentMenu == null) {
+//			if (layerStack.get(layerStack.size() - 1) instanceof Menu) {
+//				layerStack.remove(layerStack.size() - 1);
+//			}
+//		}
+		
 		//changing size
 //		frame.setSize(1777, 1000);
 //		frame.setLocationRelativeTo(null);
@@ -224,6 +258,7 @@ public class Game extends Canvas implements Runnable, EventListener {
 		for (int i = layerStack.size() - 1; i >= 0; i--) {
 			layerStack.get(i).update();
 		}
+		
 	}
 	
 	public void render() {
@@ -241,12 +276,16 @@ public class Game extends Canvas implements Runnable, EventListener {
 		Debug.clearStr();
 		Debug.addStr("-----DIAGNOSTICS-----");
 		
-		//Maybe permanent: We're only going to render what's on top
-//		for (int i = 0; i < layerStack.size(); i++) {
-//			layerStack.get(i).render(g);
-//			
+		for (int i = 0; i < layerStack.size(); i++) {
+			layerStack.get(i).render(g);
+			
+		}
+		
+//		if (currentMenu != null) {
+//			currentMenu.render(g);
 //		}
-		layerStack.get(layerStack.size() - 1).render(g);
+		
+//		Menu.getCurrentMenu().render(g);
 		
 		Debug.addStr("NEWLINE");
 		Debug.addStr("DEBUG KEYS");
@@ -290,6 +329,8 @@ public class Game extends Canvas implements Runnable, EventListener {
 	public void onKeyType(KeyTypedEvent e) {
 		//ESC key
 		if (e.getKeyChar() == '\u001b') System.exit(0);
+		if (e.getKeyChar() == 'm') exitLevel();
+		
 	}
 	
 	public void addLayer(Layer l) {
@@ -305,6 +346,31 @@ public class Game extends Canvas implements Runnable, EventListener {
 			layerStack.remove(index);
 	}
 	
+	public void init() throws IOException {
+		Menu mainMenu = new Menu(Assets.menuNameMain, Assets.filePathMenuBGMain);
+		Menu errorMenu = new Menu(Assets.menuNameError, Assets.filePathMenuBGMain);
+				
+		labelAnim.backgrndVisible = false;
+		labelAnimDefX = labelAnim.position.x;
+		labelAnimDefY = labelAnim.position.y;
+		labelAnim.setActionListener(() -> exit());
+		
+		panelMainMenu.add(labelAnim);
+//		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNamePlay), "Play"));		//Navigate to level select
+		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> startLevel(), "Play"));		//Navigate to level select
+		panelMainMenu.add(new UIButton(new Vector2i(750,392), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameOption), "Options"));
+		panelMainMenu.add(new UIButton(new Vector2i(750,434), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameHelp), "Help"));
+		panelMainMenu.add(new UIButton(new Vector2i(750,476), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameAbout), "About"));
+		panelMainMenu.add(new UIButton(new Vector2i(750,518), new Vector2i(310,40), () -> exit(), "Exit"));
+		
+		mainMenu.addPanel(panelMainMenu);
+		
+		UIPanel errorPanel = new UIPanel(new Vector2i(0,0), new Vector2i(Game.defWidth, Game.defHeight), false);
+		errorPanel.add(new UILabel(new Vector2i(550, 350), "Something went wrong, hit B to go back!", fontDefault, false).setColor(0));
+		errorMenu.addPanel(errorPanel);
+		
+	}
+
 	public static void main(String[] args) throws IOException {
 		
 		game = new Game();
@@ -320,6 +386,7 @@ public class Game extends Canvas implements Runnable, EventListener {
 		game.frame.setLocationRelativeTo(null);
 		game.frame.setVisible(true);
 		
+		game.init();
 		game.start();
 		
 	}

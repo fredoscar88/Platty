@@ -15,6 +15,15 @@ public class Assets {
 		public static String defaultLevelType = "/res/Level Types/Default/Debug";
 	public static String dirCustomLevelTypes = "/res/Level Types/Custom";
 	
+	public static String filePathMenuBGMain = "/res/Menu/Main Menu bg.png";
+	
+	public static String menuNameMain = "Main Menu";
+	public static String menuNamePlay = "Level Select Menu";
+	public static String menuNameOption = "Options Menu";
+	public static String menuNameHelp = "Help Menu";
+	public static String menuNameAbout = "About Menu";
+	public static String menuNameError = "Error Menu";
+	
 	public static String prgmDir = System.getProperty("user.dir");
 	
 

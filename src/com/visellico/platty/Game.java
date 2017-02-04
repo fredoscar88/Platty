@@ -6,9 +6,12 @@ import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.image.BufferStrategy;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.swing.JFrame;
 
@@ -17,6 +20,7 @@ import com.farr.Events.EventDispatcher;
 import com.farr.Events.EventListener;
 import com.farr.Events.Layer;
 import com.farr.Events.types.KeyTypedEvent;
+import com.visellico.graphics.ui.UIActionListener;
 import com.visellico.graphics.ui.UIButton;
 import com.visellico.graphics.ui.UILabel;
 import com.visellico.graphics.ui.UIPanel;
@@ -25,7 +29,10 @@ import com.visellico.input.Keyboard;
 import com.visellico.input.Mouse;
 import com.visellico.platty.level.Level;
 import com.visellico.platty.menu.Menu;
+import com.visellico.platty.utility.UICard;
+import com.visellico.platty.utility.UICardList;
 import com.visellico.util.Debug;
+import com.visellico.util.FileUtils;
 import com.visellico.util.Vector2i;
 
 public class Game extends Canvas implements Runnable, EventListener {
@@ -64,7 +71,10 @@ public class Game extends Canvas implements Runnable, EventListener {
 	
 	public Level currentLevel;
 	public Menu currentMenu;
+	public Menu menuLevelSelect;	//This menu gets an express reference because we'd like to be able to update this, particularly upon navigating to it.
+									//Perhaps I should consider adding an action to all menus, onOpen, that lets me do those actions so I dont need a reference here...
 	public static Font fontDefault = new Font("Times New Roman", Font.PLAIN, 48);
+	public static final int LEVEL_SELECT_CARD_WIDTH = 150;
 	
 	//-------
 	public UIPanel panelMainMenu = new UIPanel(new Vector2i(0,0), new Vector2i(Game.defWidth, Game.defHeight), false);
@@ -117,11 +127,12 @@ public class Game extends Canvas implements Runnable, EventListener {
 		System.out.println("GAME, main class; main thread has stopped! (debug)");
 	}
 	
-	public void startLevel() {
+	public void startLevel(String levelName) {
 		
 //		level = new Level("Testing");
 //		level = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
-		currentLevel = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
+//		currentLevel = Level.loadLevelFromFile("res/Levels/Default/" + "New Features Testing" + ".lvl");
+		currentLevel = Level.loadLevelFromFile("res/Levels/Default/" + levelName + ".lvl");
 		if (currentLevel == null) {
 			//TODO Return to menu
 			System.err.println("Level not found or otherwise not loaded.");
@@ -226,24 +237,8 @@ public class Game extends Canvas implements Runnable, EventListener {
 		if (increment == Integer.MAX_VALUE) increment = 0;	//This would just rollover into Integer.MIN_VALUE and probably not be that big of a deal.
 		
 		currentMenu = Menu.getCurrentMenu();
-		if (currentMenu != null) {
-			System.out.println(currentMenu.name);
-		}
+
 		layerSort();
-//		if (currentMenu != null ) {//&& layerStack.get(layerStack.size() - 1) instanceof Menu) {
-//			if (layerStack.get(layerStack.size() - 1) != currentMenu) {
-//				layerStack.remove(layerStack.size() - 1);
-//				layerStack.add(currentMenu);
-//			}
-//		} else if (currentMenu == null) {
-//			if (layerStack.get(layerStack.size() - 1) instanceof Menu) {
-//				layerStack.remove(layerStack.size() - 1);
-//			}
-//		}
-		
-		//changing size
-//		frame.setSize(1777, 1000);
-//		frame.setLocationRelativeTo(null);
 		
 		//frame.getWidth being, essentially, our "newWidth"
 		//Basically, lets us resize the frame and region its rendered to. Screen has to take care of itself.
@@ -274,7 +269,7 @@ public class Game extends Canvas implements Runnable, EventListener {
 		g.fillRect(0, 0, width, height);		
 		
 		Debug.clearStr();
-		Debug.addStr("-----DIAGNOSTICS-----");
+		Debug.addStr("----------DIAGNOSTICS/INFO----------");
 		
 		for (int i = 0; i < layerStack.size(); i++) {
 			layerStack.get(i).render(g);
@@ -287,12 +282,7 @@ public class Game extends Canvas implements Runnable, EventListener {
 		
 //		Menu.getCurrentMenu().render(g);
 		
-		Debug.addStr("NEWLINE");
-		Debug.addStr("DEBUG KEYS");
-		Debug.addStr("CTRL Z : Zoom in");
-		Debug.addStr("CTRL X : Zoom out");
-		Debug.addStr("CTRL R : Zoom reset");
-		Debug.addStr("SHFT R : Reload assets");
+		
 		
 		Debug.drawStrings(g);
 		
@@ -328,7 +318,7 @@ public class Game extends Canvas implements Runnable, EventListener {
 	
 	public void onKeyType(KeyTypedEvent e) {
 		//ESC key
-		if (e.getKeyChar() == '\u001b') System.exit(0);
+//		if (e.getKeyChar() == '\u001b') System.exit(0);
 		if (e.getKeyChar() == 'm') exitLevel();
 		
 	}
@@ -347,8 +337,9 @@ public class Game extends Canvas implements Runnable, EventListener {
 	}
 	
 	public void init() throws IOException {
-		Menu mainMenu = new Menu(Assets.menuNameMain, Assets.filePathMenuBGMain);
-		Menu errorMenu = new Menu(Assets.menuNameError, Assets.filePathMenuBGMain);
+		Menu menuMain = new Menu(Assets.menuNameMain, Assets.filePathMenuBGMain);
+		Menu menuError = new Menu(Assets.menuNameError, Assets.filePathMenuBGMain);
+		Menu menuLevelSelect = new Menu(Assets.menuNameLevelSelect, Assets.filePathMenuBGDefault);
 				
 		labelAnim.backgrndVisible = false;
 		labelAnimDefX = labelAnim.position.x;
@@ -357,18 +348,75 @@ public class Game extends Canvas implements Runnable, EventListener {
 		
 		panelMainMenu.add(labelAnim);
 //		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNamePlay), "Play"));		//Navigate to level select
-		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> startLevel(), "Play"));		//Navigate to level select
+//		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> startLevel(), "Play"));		//Navigate to level select
+		panelMainMenu.add(new UIButton(new Vector2i(750,350), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameLevelSelect), "Play"));		//Navigate to level select
 		panelMainMenu.add(new UIButton(new Vector2i(750,392), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameOption), "Options"));
 		panelMainMenu.add(new UIButton(new Vector2i(750,434), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameHelp), "Help"));
 		panelMainMenu.add(new UIButton(new Vector2i(750,476), new Vector2i(310,40), () -> Menu.navigateTo(Assets.menuNameAbout), "About"));
 		panelMainMenu.add(new UIButton(new Vector2i(750,518), new Vector2i(310,40), () -> exit(), "Exit"));
 		
-		mainMenu.addPanel(panelMainMenu);
+		menuMain.addPanel(panelMainMenu);
 		
 		UIPanel errorPanel = new UIPanel(new Vector2i(0,0), new Vector2i(Game.defWidth, Game.defHeight), false);
-		errorPanel.add(new UILabel(new Vector2i(550, 350), "Something went wrong, hit B to go back!", fontDefault, false).setColor(0));
-		errorMenu.addPanel(errorPanel);
+		errorPanel.add(new UILabel(new Vector2i(550, 350), "Something went wrong, hit Esc to go back!", fontDefault, false).setColor(0));
+		errorPanel.add(new UILabel(new Vector2i(550, 400), "In fact, I probably just haven't implemented this menu yet!", fontDefault, false).setColor(0));
+		menuError.addPanel(errorPanel);
 		
+		UIPanel panelLevels = new UIPanel(new Vector2i(0,0), new Vector2i(Game.defWidth, Game.defHeight), false);
+		panelLevels.add(new UILabel(new Vector2i((int) (Game.defWidth * .05), (int) (Game.defHeight * .1) - 24), "Select a level below", fontDefault.deriveFont(24f), false).setColor(0));
+		
+		UIPanel panelLevelSelect = new UIPanel(new Vector2i((int) (Game.defWidth * .05), (int) (Game.defHeight * .1)), new Vector2i((int) (Game.defWidth * .9), (int) (Game.defHeight * .75)), false);
+		panelLevels.add(panelLevelSelect);
+
+		UICardList clistLevels = new UICardList(panelLevelSelect.size.x, panelLevelSelect.size.y, 10, LEVEL_SELECT_CARD_WIDTH, LEVEL_SELECT_CARD_WIDTH);
+		panelLevelSelect.add(clistLevels);
+		
+		
+		List<String> lvlsDefault = loadLevelNames(Assets.prgmDir + Assets.dirDefaultLevels + "/");
+		List<String> lvlsCustom = loadLevelNames(Assets.prgmDir + Assets.dirCustomLevels + "/");
+		
+		for (int i = 0; i < lvlsDefault.size(); i++) {
+			
+			final int temp = i;
+			UICard c = new UICard(new Vector2i(), new Vector2i(LEVEL_SELECT_CARD_WIDTH, LEVEL_SELECT_CARD_WIDTH));
+			clistLevels.addCard(c);
+			c.add(new UILabel(new Vector2i(2,2), lvlsDefault.get(temp), fontDefault.deriveFont(16f), false).setColor(Color.black));
+			c.setActionListener((UIActionListener) () -> startLevel(lvlsDefault.get(temp)));
+		}
+		for (int i = 0; i < lvlsCustom.size(); i++) {
+			
+			final int temp = i;
+			UICard c = new UICard(new Vector2i(), new Vector2i(LEVEL_SELECT_CARD_WIDTH, LEVEL_SELECT_CARD_WIDTH));
+			clistLevels.addCard(c);
+			c.add(new UILabel(new Vector2i(2,2), lvlsCustom.get(temp), fontDefault.deriveFont(16f), false).setColor(Color.black));
+			c.setActionListener((UIActionListener) () -> startLevel(lvlsCustom.get(temp)));
+		}
+		
+		menuLevelSelect.addPanel(panelLevels);
+	}
+	
+	public List<UICard> loadLevelsAsCards() {
+		
+		return null;
+		
+	}
+	
+	/**
+	 * Loads all of the file names, and saves a path to them, inside a hashmap.
+	 * @param directory Directory to load file names from. File names are the Key, file paths are the value.
+	 * @return
+	 */
+	public List<String> loadLevelNames(String directory) {
+		
+		File levelDir = new File(directory);
+		List<String> result = new ArrayList<>();
+		
+		for (String str : levelDir.list()) {
+			result.add(FileUtils.stripExtension(str));
+		}
+		
+		
+		return result;
 	}
 
 	public static void main(String[] args) throws IOException {

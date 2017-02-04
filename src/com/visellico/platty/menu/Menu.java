@@ -19,6 +19,7 @@ import com.farr.Events.types.KeyTypedEvent;
 import com.farr.Events.types.MousePressedEvent;
 import com.visellico.graphics.ui.UIPanel;
 import com.visellico.platty.Assets;
+import com.visellico.util.Debug;
 
 //TODO Subclass this so we can use this as more of a framework class. I'd like to have menus that, for instance, have transparent or no background (i.e render over other things,
 //	like a pause menu!) I just want it to be more versatile. Sub-menus that pop out (like lists?) would also be small enough, but they may be panels.
@@ -38,7 +39,7 @@ public class Menu implements Layer {
 	public Menu(String name, String bgPath) throws IOException {
 		
 		String path = Assets.prgmDir + bgPath;
-		System.out.println(path);
+//		System.out.println(path);
 		
 		imgBackground = ImageIO.read(new File(path));
 		
@@ -59,6 +60,10 @@ public class Menu implements Layer {
 		//Not initing this 
 	}
 	
+	private void onOpen() {
+		//Do a thing
+	}
+	
 	/*
 	 * Places the menu associated with the menuName on top of the Menu Stack (highest visible layer) (Menu's may or may not be able to overlap each other)
 	 */
@@ -70,6 +75,7 @@ public class Menu implements Layer {
 		else {			
 			menuStack.add(menuMap.get(Assets.menuNameError));
 		}
+		menuStack.get(menuStack.size() - 1).onOpen();
 	}
 	
 	/*
@@ -92,6 +98,9 @@ public class Menu implements Layer {
 		for (int i = 0; i < uiPanels.size(); i++) {
 			uiPanels.get(i).render(g);
 		}
+		
+		Debug.addStr("DEBUG KEYS");
+		Debug.addStr("ESC    : Go back to previous menu");
 	}
 
 	//updates go from top to bottom
@@ -116,7 +125,12 @@ public class Menu implements Layer {
 	public boolean onKeyType(KeyTypedEvent e) {
 		
 //		System.out.printf("%04X\n", (short) e.getKeyChar());
-		if (e.getKeyChar() == 'b' || e.getKeyChar() == 'B') {
+		//Changing this to esc
+//		if (e.getKeyChar() == 'b' || e.getKeyChar() == 'B') {
+//			back();
+//			return true;
+//		}
+		if (e.getKeyChar() == '\u001B') {// || e.getKeyChar() == 'B') {
 			back();
 			return true;
 		}

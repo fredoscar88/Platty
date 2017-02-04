@@ -45,6 +45,8 @@ public class Level implements Layer {
 	public Screen screen;
 	//Default scale
 	private static final int SCREEN_SCALE = 4;
+	private static final int MAX_ZOOM = 100;
+	private static final int MIN_ZOOM = 1;
 	private int newScale = SCREEN_SCALE;
 	public static final String DEFAULT_LEVEL_TYPE = "Fields";	
 	
@@ -269,10 +271,17 @@ public class Level implements Layer {
 		
 		Debug.addStr("LEVEL  POS : " + xPos + " " + yPos);
 		Debug.addStr("SCREEN POS : " + xPos + " " + getScreenY(yPos));
-		Debug.addStr("ZOOM LVL   : " + newScale + ((newScale == SCREEN_SCALE) ? " (Default)" : ""));
+		Debug.addStr("ZOOM LVL   : " + newScale + ((newScale == SCREEN_SCALE) ? " (Default)" : "") + ((newScale == MAX_ZOOM) ? " (Max zoom)" : "") + ((newScale == MIN_ZOOM) ? " (Min zoom)" : ""));
 		Debug.addStr("PX IN FRAME: " + screen.height * screen.width);
 		Debug.addStr("SCREEN W   : " + screen.width);
 		Debug.addStr("SCREEN H   : " + screen.height);
+		Debug.addStr("NEWLINE");
+		Debug.addStr("DEBUG KEYS (WHEN IN LEVEL)");
+		Debug.addStr("     M : Return to Main Menu");
+		Debug.addStr("CTRL Z : Zoom in");
+		Debug.addStr("CTRL X : Zoom out");
+		Debug.addStr("CTRL R : Zoom reset");
+		Debug.addStr("SHFT R : Reload assets");
 		
 //		g.setColor(Color.white);
 //		g.setFont(new Font("Consolas", 0, 12));	
@@ -372,10 +381,10 @@ public class Level implements Layer {
 			newScale = SCREEN_SCALE;
 			return true;
 		case (charCtrlZ): 
-			if (screen.scale < 100) newScale = screen.scale + 1;
+			if (screen.scale < MAX_ZOOM) newScale = screen.scale + 1;
 			return true;
 		case (charCtrlX): 
-			if (screen.scale > 1) newScale = screen.scale - 1;
+			if (screen.scale > MIN_ZOOM) newScale = screen.scale - 1;
 			return true;
 		case (charShftR): 
 			reloadAssets();

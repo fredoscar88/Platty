@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="RaineCloud">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../../RaineCloud" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../../RaineCloud/src" />
+    </SOURCES>
+  </library>
+</component>

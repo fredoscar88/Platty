@@ -2,7 +2,11 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/../../My libraries, I suppose/EventSys/EventSys.iml" filepath="$PROJECT_DIR$/../../My libraries, I suppose/EventSys/EventSys.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../LevelEditor/LevelEditor.iml" filepath="$PROJECT_DIR$/../LevelEditor/LevelEditor.iml" />
       <module fileurl="file://$PROJECT_DIR$/Platty.iml" filepath="$PROJECT_DIR$/Platty.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../../RaineCloud/RaineCloud.iml" filepath="$PROJECT_DIR$/../../RaineCloud/RaineCloud.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ViseUtilities/ViseUtilities.iml" filepath="$PROJECT_DIR$/../ViseUtilities/ViseUtilities.iml" />
     </modules>
   </component>
 </project>

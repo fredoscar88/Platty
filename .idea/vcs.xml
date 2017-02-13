@@ -2,5 +2,9 @@
 <project version="4">
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../My libraries, I suppose/EventSys" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../LevelEditor" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../ViseUtilities" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/../../RaineCloud" vcs="Git" />
   </component>
 </project>

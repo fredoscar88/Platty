@@ -1,0 +1,11 @@
+<component name="libraryTable">
+  <library name="ViseUtilities">
+    <CLASSES>
+      <root url="file://$PROJECT_DIR$/../ViseUtilities" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES>
+      <root url="file://$PROJECT_DIR$/../ViseUtilities/src" />
+    </SOURCES>
+  </library>
+</component>
